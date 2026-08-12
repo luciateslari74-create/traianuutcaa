@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Шпоры Pro</title>
+    <style>
+        :root {
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --accent: #ff3333; /* Красный акцент */
+            --text-main: #e0e0e0;
+            --text-muted: #aaaaaa;
+            --shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            --trans-speed: 0.3s;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            padding-bottom: 80px; /* Отступ для кнопок снизу */
+            height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Шапка с предупреждением */
+        .header-top {
+            background: linear-gradient(45deg, #8b0000, #ff3333);
+            color: #fff;
+            padding: 15px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 14px;
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        h1 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            margin-top: 20px;
+            color: #fff;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* --- Поиск --- */
+        .search-container {
+            position: relative;
+            margin-bottom: 30px;
+        }
+
+        .search-box {
+            width: 100%;
+            padding: 15px 50px 15px 20px;
+            font-size: 16px;
+            background-color: var(--card-bg);
+            border: 2px solid transparent;
+            color: #fff;
+            border-radius: 50px; /* Круглый поиск */
+            box-sizing: border-box;
+            transition: all var(--trans-speed) ease;
+            outline: none;
+        }
+
+        .search-box:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 15px rgba(255, 51, 51, 0.3);
+        }
+
+        .search-icon {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 20px;
+            pointer-events: none;
+            transition: color var(--trans-speed);
+        }
+        
+        .search-box:focus + .search-icon {
+            color: var(--accent);
+        }
+
+        /* --- Карточки --- */
+        .subject-card {
+            background-color: var(--card-bg);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            box-shadow: var(--shadow);
+            transition: transform var(--trans-speed) ease, box-shadow var(--trans-speed) ease;
+            border-left: 4px solid var(--accent);
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            animation: fadeIn 0.5s ease forwards;
+            opacity: 0; /* Для анимации появления */
+        }
+        
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+
+        .subject-card:active {
+            transform: scale(0.98); /* Эффект нажатия */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+        }
+
+        .subject-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #fff;
+        }
+
+        .subject-desc {
+            color: var(--text-muted);
+            font-size: 14px;
+            line-height: 1.4;
+        }
+        
+        /* Пример задержки для анимации появления карточек */
+        .subject-card:nth-child(1) { animation-delay: 0.1s; }
+        .subject-card:nth-child(2) { animation-delay: 0.2s; }
+        .subject-card:nth-child(3) { animation-delay: 0.3s; }
+
+
+        /* --- ПЛАВАЮЩАЯ КНОПКА + --- */
+        .fab {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            width: 60px;
+            height: 60px;
+            background-color: var(--accent);
+            border-radius: 50%;
+            box-shadow: 0 4px 20px rgba(255, 51, 51, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #fff;
+            font-size: 36px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Пружинистая анимация */
+            z-index: 1000;
+            border: none;
+            outline: none;
+            -webkit-tap-highlight-color: transparent; /* Убирает синюю подсветку при тапе на телефоне */
+        }
+
+        .fab:active {
+            transform: scale(0.9) rotate(90deg); /* При нажатии сжимается и крутится */
+            background-color: #cc0000;
+        }
+
+        /* Меню, которое всплывает при нажатии на + */
+        .fab-menu {
+            position: fixed;
+            bottom: -150px; /* Скрыто изначально */
+            left: 20px;
+            background-color: var(--card-bg);
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            transition: bottom 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .fab-menu.active {
+            bottom: 100px; /* Поднимается вверх */
+        }
+
+        .menu-item {
+            background-color: #2a2a2a;
+            color: #fff;
+            padding: 12px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 16px;
+            transition: background 0.2s;
+            border: none;
+            cursor: pointer;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        
+        .menu-item:active {
+            background-color: var(--accent);
+        }
+        
+        /* Иконки для меню (можно использовать эмодзи или простые символы) */
+        .icon {
+            font-size: 20px;
+        }
+        
+        /* Затемнение фона при открытом меню */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 998;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        
+        .overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+    </style>
+</head>
+<body>
+
+<!-- Шапка с предупреждением -->
+<div class="header-top">
+    С4АЧЯЙ БЛИН ВПН, ЧТОБЫ САЙТ НЕ ЗАКРЫЛИ!
+</div>
+
+<div class="container">
+    <h1>ШПОРЫ + ТЕСТЫ</h1>
+
+    <!-- Поиск с иконкой -->
+    <div class="search-container">
+        <input type="text" class="search-box" placeholder="Поиск по предмету..." id="searchInput">
+        <span class="search-icon">&#128269;</span> <!-- Эмодзи лупы -->
+    </div>
+
+    <!-- Список предметов (Примеры) -->
+    <div class="subject-card">
+        <div class="subject-title">МАТЕМАТИКА — Контрольная №1</div>
+        <div class="subject-desc">Ответы на все 4 варианта. Формулы производных, интегралы.</div>
+    </div>
+
+    <div class="subject-card">
+        <div class="subject-title">ИСТОРИЯ — Тест по XX веку</div>
+        <div class="subject-desc">Даты революции, Первая мировая, СССР. Основные события.</div>
+    </div>
+
+    <div class="subject-card">
+        <div class="subject-title">ФИЗИКА — Законы Ньютона</div>
+        <div class="subject-desc">Шпаргалка с формулами F=ma, Fтр, P. Основные понятия.</div>
+    </div>
+    
+    <!-- Добавим еще одну для теста анимации -->
+    <div class="subject-card">
+        <div class="subject-title">ХИМИЯ — Таблица Менделеева</div>
+        <div class="subject-desc">Валентности, степени окисления основных элементов.</div>
+    </div>
+
+</div>
+
+<!-- Затемнение фона -->
+<div class="overlay" id="overlay"></div>
+
+<!-- Плавающая кнопка + -->
+<button class="fab" id="fabBtn">+</button>
+
+<!-- Меню, всплывающее при нажатии на + -->
+<div class="fab-menu" id="fabMenu">
+    <button class="menu-item" id="takePhotoBtn">
+        <span class="icon">&#128247;</span> Сфоткать контрошу
+    </button>
+    <button class="menu-item" id="addTextBtn">
+        <span class="icon">&#9997;</span> Ввести шпору вручную
+    </button>
+</div>
+
+<script>
+    // JavaScript для анимации меню
+    const fabBtn = document.getElementById('fabBtn');
+    const fabMenu = document.getElementById('fabMenu');
+    const overlay = document.getElementById('overlay');
+    const takePhotoBtn = document.getElementById('takePhotoBtn');
+
+    fabBtn.addEventListener('click', function() {
+        fabMenu.classList.toggle('active');
+        overlay.classList.toggle('active');
+        
+        // Если кнопка была нажата, меняем ей немного вид для анимации
+        this.style.transform = fabMenu.classList.contains('active') ? 'scale(0.9) rotate(45deg)' : 'scale(1) rotate(0deg)';
+    });
+
+    // Закрыть меню при клике на затемнение
+    overlay.addEventListener('click', function() {
+        fabMenu.classList.remove('active');
+        overlay.classList.remove('active');
+        fabBtn.style.transform = 'scale(1) rotate(0deg)';
+    });
+
+    // --- ФУНКЦИОНАЛ КАМЕРЫ ---
+    takePhotoBtn.addEventListener('click', function() {
+        // Эта команда на телефоне откроет выбор камеры или файлов
+        // ВАЖНО: Это работает только если сайт запущен через HTTPS (как на GitHub Pages)
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*'; // Разрешаем только фото
+        input.capture = 'environment'; // Пытаемся открыть заднюю камеру сразу
+        
+        input.click();
+        
+        // После выбора файла, можно было бы сделать логику загрузки, 
+        // но сейчас это просто откроет камеру.
+        
+        fabMenu.classList.remove('active'); // Закрыть меню после выбора
+        overlay.classList.remove('active');
+    });
+    
+    // --- ЛОГИКА ПОИСКА ---
+    const searchInput = document.getElementById('searchInput');
+    const cards = document.querySelectorAll('.subject-card');
+    
+    searchInput.addEventListener('input', function() {
+        const filter = this.value.toLowerCase();
+        
+        cards.forEach(card => {
+            const title = card.querySelector('.subject-title').textContent.toLowerCase();
+            const desc = card.querySelector('.subject-desc').textContent.toLowerCase();
+            
+            if (title.includes(filter) || desc.includes(filter)) {
+                card.style.display = '';
+                card.style.animation = 'fadeIn 0.3s ease forwards'; // При поиске тоже анимация
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    });
+
+</script>
+
+</body>
+</html>
