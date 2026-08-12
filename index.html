@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Общие Шпоры</title>
+    <style>
+        body { font-family: sans-serif; padding: 15px; background: #f4f4f9; max-width: 500px; margin: auto; }
+        .card { background: white; padding: 15px; margin-bottom: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        input[type="text"], input[type="file"], button { width: 100%; padding: 14px; margin: 8px 0; border-radius: 8px; border: 1px solid #ddd; box-sizing: border-box; font-size: 16px; }
+        button { background: #28a745; color: white; border: none; font-weight: bold; cursor: pointer; }
+        img { max-width: 100%; height: auto; border-radius: 8px; display: block; margin-bottom: 10px; }
+        h3 { margin: 5px 0 15px 0; color: #333; font-size: 16px; font-weight: 600; }
+        #loading { display: none; color: #007bff; text-align: center; font-weight: bold; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+    <h2>Добавить шпору</h2>
+    <div class="card">
+        <input type="text" id="title" placeholder="Название темы">
+        <input type="file" id="photo" accept="image/*">
+        <button onclick="uploadCheat()">Добавить шпору</button>
+        <div id="loading">Загрузка в облако... ⏳</div>
+    </div>
+
+    <h2>Все шпоры</h2>
+    <div id="list">Загрузка шпор...</div>
+
+    <script>
+        // Твои ключи от jsonbin.io (замени на свои после регистрации)
+        const BIN_ID = "ТВОЙ_BIN_ID_ЗДЕСЬ";
+        const API_KEY = "ТВОЙ_MASTER_KEY_ЗДЕСЬ";
+
+        document.addEventListener("DOMContentLoaded", loadCheats);
+
+        async function uploadCheat() {
+            const title = document.getElementById('title').value.trim();
+            const fileInput = document.getElementById('photo');
+            const loading = document.getElementById('loading');
+
+            if (!title || fileInput.files.length === 0) {
+                alert("Заполни название и выбери фото!");
+                return;
+            }
+
+            loading.style.display = "block";
+            const file = fileInput.files[0];
+
+            try {
+                // 1. Загружаем картинку на ImgBB
+                const formData = new FormData();
+                formData.append("image", file);
+                const imgRes = await fetch("https://api.imgbb.com/1/upload?key=6d207e02198a847798d181ace43d83d8", {
+                    method: "POST",
+                    body: formData
+                });
+                const imgData = await imgRes.json();
+
+                if (!imgData.success) throw new Error("Ошибка загрузки картинки");
+                const imageUrl = imgData.data.url;
+
+                // 2. Получаем текущие шпоры из базы JSONBin
+                const getRes = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
+                    headers: { "X-Master-Key": API_KEY }
+                });
+                const getData = await getRes.json();
+                let cheats = getData.record.cheats || [];
+
+                // 3. Добавляем новую шпору в начало списка
+                cheats.unshift({ title: title, url: imageUrl });
+
+                // 4. Сохраняем обновленный список обратно в облако
+                await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-Master-Key": API_KEY
+                    },
+                    body: JSON.stringify({ cheats: cheats })
+                });
+
+                document.getElementById('title').value = '';
+                document.getElementById('photo').value = '';
+                loadCheats();
+                alert("Шпора успешно добавлена для всех!");
+
+            } catch (error) {
+                alert("Произошла ошибка при сохранении!");
+            } finally {
+                loading.style.display = "none";
+            }
+        }
+
+        async function loadCheats() {
+            const listDiv = document.getElementById('list');
+            try {
+                const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
+                    headers: { "X-Master-Key": API_KEY }
+                });
+                const data = await res.json();
+                let cheats = data.record.cheats || [];
+
+                listDiv.innerHTML = '';
+                if (cheats.length === 0) {
+                    listDiv.innerHTML = '<p>Пока нет ни одной шпоры.</p>';
+                    return;
+                }
+
+                cheats.forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = 'card';
+                    div.innerHTML = `<img src="${item.url}" loading="lazy"><h3>${item.title}</h3>`;
+                    listDiv.appendChild(div);
+                });
+            } catch (e) {
+                listDiv.innerHTML = '<p>Не удалось загрузить список шпор.</p>';
+            }
+        }
+    </script>
+</body>
+</html>
+
